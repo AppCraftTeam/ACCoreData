@@ -1,0 +1,16 @@
+{
+  "object": {
+    "pins": [
+      {
+        "package": "ACExtensions",
+        "repositoryURL": "https://github.com/AppCraftTeam/ACExtensions.git",
+        "state": {
+          "branch": null,
+          "revision": "bfaebd56b3c81cf559afed901ddce73bf2d62a55",
+          "version": "1.0.0"
+        }
+      }
+    ]
+  },
+  "version": 1
+}
