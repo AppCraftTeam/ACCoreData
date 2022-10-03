@@ -24,5 +24,4 @@ public extension LocalMappable {
     func mapEntityFromDomain(data: AnyObject) {
         NSLog("[\(self)] - Error: Domain to entity mapper not implemented")
     }
-    
 }

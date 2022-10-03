@@ -6,11 +6,9 @@
 //
 
 import CoreData
-import ACExtensions
 
 public enum LocalFactory {
     
-    // MARK: - Public methods
     public static func request(_ entityClass: AnyClass, predicate: NSPredicate?, sortDescriptors: [NSSortDescriptor]?) -> NSFetchRequest<NSManagedObject> {
         let request: NSFetchRequest<NSManagedObject> = NSFetchRequest(entityName: String.className(entityClass))
         
@@ -23,7 +21,11 @@ public enum LocalFactory {
     public static func sortDescriptor(key: String, ascending: Bool) -> NSSortDescriptor {
         return NSSortDescriptor(key: key, ascending: ascending)
     }
-    
-    // MARK: - Private methods
-    
 }
+
+extension String {
+    static func className(_ aClass: AnyClass) -> String {
+        NSStringFromClass(aClass).components(separatedBy: ".").last ?? ""
+    }
+}
+
