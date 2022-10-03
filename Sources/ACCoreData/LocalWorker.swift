@@ -18,21 +18,16 @@ public protocol LocalWorkerInterface: AnyObject {
 
 open class LocalWorker: LocalWorkerInterface {
     
-    // MARK: - Props
+    // MARK: Props
     private var mainContext: NSManagedObjectContext
     private var privateContext: NSManagedObjectContext
     
     // MARK: - Initialization
     public init(modelName: String) {
         guard let objectModelUrl = Bundle.main.url(forResource: modelName, withExtension: "momd") else {
-            NSLog("[LocalWorker] - Error: Could not load model from bundle")
-            
             fatalError("[LocalWorker] - Error: Could not load model from bundle")
         }
-        
         guard let objectModel = NSManagedObjectModel(contentsOf: objectModelUrl) else {
-            NSLog("[LocalWorker] - Error: Could not init model from \(objectModelUrl)")
-            
             fatalError("[LocalWorker] - Error: Could not init model from \(objectModelUrl)")
         }
         
@@ -42,23 +37,35 @@ open class LocalWorker: LocalWorkerInterface {
         self.mainContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
         self.mainContext.persistentStoreCoordinator = coordinator
         
-        let fileManagerUrls = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
-        let documentUrl = fileManagerUrls[fileManagerUrls.endIndex - 1]
+        let storeURL: URL = {
+            let urls = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
+            if urls.indices.contains(urls.endIndex - 1) {
+                let docURL = urls[urls.endIndex - 1]
+                let storeURL = docURL.appendingPathComponent("\(modelName).sqlite")
+                return storeURL
+            } else {
+                fatalError("[LocalWorker] - Error: Failure loading store")
+            }
+        }()
         
-        let storeUrl = documentUrl.appendingPathComponent("\(modelName).sqlite")
-        let options = [NSMigratePersistentStoresAutomaticallyOption: true,
-                       NSInferMappingModelAutomaticallyOption: true]
+        let options = [
+            NSInferMappingModelAutomaticallyOption: true,
+            NSMigratePersistentStoresAutomaticallyOption: true
+        ]
+        
         do {
-            try coordinator.addPersistentStore(ofType: NSSQLiteStoreType, configurationName: nil, at: storeUrl, options: options)
+            if #available(watchOS 8.0, iOS 15.0, *) {
+                _ = try coordinator.addPersistentStore(type: .sqlite, at: storeURL, options: options)
+            } else {
+                try coordinator.addPersistentStore(ofType: NSSQLiteStoreType, configurationName: nil, at: storeURL, options: options)
+            }
         } catch let error {
-            NSLog("[LocalWorker] - Error: Could not migrate store: \(error.localizedDescription)")
-            
             fatalError("[LocalWorker] - Error: Could not migrate store: \(error.localizedDescription)")
         }
         
         self.privateContext = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
+        self.privateContext.parent = mainContext
         self.privateContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
-        self.privateContext.parent = self.mainContext
     }
     
     deinit {
@@ -67,7 +74,7 @@ open class LocalWorker: LocalWorkerInterface {
     
     // MARK: - LocalWorkerInterface
     public func create(entityName: String) -> NSManagedObject {
-        return NSEntityDescription.insertNewObject(forEntityName: entityName, into: self.privateContext)
+        NSEntityDescription.insertNewObject(forEntityName: entityName, into: self.privateContext)
     }
     
     public func save(completion: @escaping(_ result: Bool, _ error: Error?) -> Void) {

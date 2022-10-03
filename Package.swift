@@ -7,23 +7,20 @@ let package = Package(
     name: "ACCoreData",
     platforms: [
         .iOS(.v11),
+        .watchOS(.v6)
     ],
     products: [
         .library(
             name: "ACCoreData",
-            targets: ["ACCoreData"]),
+            targets: ["ACCoreData"]
+        ),
     ],
-    dependencies: [
-        .package(
-            name: "ACExtensions",
-            url: "https://github.com/AppCraftTeam/ACExtensions.git",
-            .upToNextMajor(from: "1.0.0")
-        )
-    ],
+    dependencies: [],
     targets: [
         .target(
             name: "ACCoreData",
-            dependencies: ["ACExtensions"]),
+            dependencies: []
+        ),
         .testTarget(
             name: "ACCoreDataTests",
             dependencies: ["ACCoreData"]),
